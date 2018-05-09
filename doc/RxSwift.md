@@ -7,7 +7,7 @@
 Observable用来描述一个操作的流程，简单可以描述为：`输入`->`执行`->`输出`*n->`结束`。对于一个Observable来说，他的`执行`部分代码需要执行尽量少的功能代码，如果功能较为庞大则可以考虑拆分为不同的功能。这样优点是显而易见的，对于函数式编程来说，功能越简单的函子(functor)越能组合出越多功能越复杂的函数。第二，这种小功能的函数也更方便测试和定位问题，同时使代码结构更好，代码可读性更强。
 
 例子：获取邮件的操作流程如下，如果展开所有功能，代码是这样的，首先会检查网络，再检查账号登录情况，再去拉取message，返回拉取的数据。
-```
+```swift
 func fetchMailsOb(of folderPath: String) -> Observable<IMAPResult<[MCOIMAPMessage]>> {
         if Utils.netIsReachable {
         // check acount:
@@ -51,7 +51,7 @@ func fetchMailsOb(of folderPath: String) -> Observable<IMAPResult<[MCOIMAPMessag
 
 Rx给我们提供了统一的错误处理报告机制，他是一种阻断式的处理方式，在链式流里当其中一个操作发生错误，则整个链式流终止。
 
-```
+```swift
 a.flatMap { _ in b }.flatMap { _ in c } // 如果b throw了一个error1，则Observable将收到一个Error Event(error1)。
 ```
 
@@ -61,7 +61,7 @@ a.flatMap { _ in b }.flatMap { _ in c } // 如果b throw了一个error1，则Obs
 
 - 特殊情况：
 在实际需求中可能出现，a的错误则弹Toast提示，b的错误则弹Alert，c的提示则不响应。这种情况则在创建链式操作流时做区分操作：
-```
+```swift
 a.do(onError: {
         toast(...)
     })
@@ -76,7 +76,7 @@ a.do(onError: {
 
 在实际使用函数时，经常会用到闭包，从而会涉及到引用类型和值类型的使用。引用类型则要注意循环引用引起的内存泄露。
 
-```
+```swift
 var ref = ClassA()
 
 operation
@@ -105,7 +105,7 @@ operation
 
 - 对于监听列表，可以使用`Observable.collection(from:synchronousStart:)`：
 
-```
+```swift
 let realm = try! Realm()
 let laps = realm.objects(Lap.self)
 
@@ -119,7 +119,7 @@ Observable.collection(from: laps)
 ```
 
 - 监听单个对象，或指定其某个属性：
-```
+```swift
 Observable.from(object: ticker, properties: ["name", "id", "family"])
 ```
 
@@ -129,7 +129,7 @@ Observable.from(object: ticker, properties: ["name", "id", "family"])
 
 Rx式的写操作：
 
-```
+```swift
 let realm = try! Realm()
 let messages = [Message("hello"), Message("world")]
 
@@ -145,7 +145,7 @@ Observable.from(allMessages)
  
 使用库[RxRealmDataSources](https://github.com/RxSwiftCommunity/RxRealmDataSources)，可以简单的建立DataSource，直接绑定数据到TableView或CollectionView上。
 
-```
+```swift
 // 无动画可以直接使用bindTo:
 Observable.from( [Realm collection] )
   .bindTo(tableView.rx.items) {tv, ip, element in
@@ -180,7 +180,7 @@ laps
 
 `observeOn:`和`subscribeOn:`的区别是，`observeOn`只保证观察对象的回调在指定的线程，而`subscribeOn:`则会把订阅和非订阅的逻辑都放在指定线程执行。
 
-```
+```swift
 let a = Observable.just(1)
 let b = Observable.just(2)
 
@@ -219,7 +219,7 @@ completed, <NSThread: 0x6000002611c0>{number = 5, name = (null)}
 
 使用`subscribeOn:`情况下，在操作链中任意一个地方调用，预期结果都是一样的。`observeOn:`则只会影响它之后的数据操作。混合调用`subscribeOn:`和`observeOn:`会导致切换线程:
 
-```
+```swift
 let a = Observable<Int>.create { (observer) -> Disposable in
     print("a create on: \(Thread.current)")
     observer.onNext(1)
@@ -259,7 +259,7 @@ completed, <NSThread: 0x600000265c80>{number = 4, name = (null)}
 - 更新了界面信息
 
 举个简单的例子：
-```
+```swift
 var i = 0
 
 let observable = Observable.from([1,2,3])
@@ -299,7 +299,7 @@ observer b:9
 
 怎么解决副作用，我们可以把状态或者值当做一个函数的一个参数来改造函数：
 
-```
+```swift
 func increase(of array: [Int]) -> Observable<Int> {
     let indeces = 0..<array.count
     return Observable.from(indeces)
@@ -315,7 +315,7 @@ func increase(of array: [Int]) -> Observable<Int> {
 
 下面的代码可能是我们平常经常编写的：
 
-```
+```swift
 func someFunction() -> Observable<String> {
     return otherOb.map { result in
         return result + GlobalInstance.property1
@@ -328,7 +328,7 @@ func someFunction() -> Observable<String> {
 
 这样的代码在平常运行和阅读时没有任何问题，但是如果在测试时，`GlobalInstance.property1`成为测试条件之一时，这个方法就变得不可测试了。简单的做法是，在写一个函数时，可以优先考虑下这个函数的功能和测试条件，尽量把测试条件当做可变参数进行构建：
 
-```
+```swift
 func someFunction(with param: String) -> Observable<String> {
     return otherOb.map { result in
         return result + param
@@ -341,7 +341,7 @@ func someFunction(with param: String) -> Observable<String> {
 
 如果输入条件比较复杂，可以根据实际分类来规整出协议，提高可读性和可维护性：
 
-```
+```swift
 func someFunction(with info: ProtocolA & ProtocolB) -> Observable<String> {
     return otherOb
         .map { result in
