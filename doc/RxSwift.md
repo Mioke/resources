@@ -29,7 +29,7 @@ func fetchMailsOb(of folderPath: String) -> Observable<IMAPResult<[MCOIMAPMessag
 
 根据我们的简化原则，可以把网络检查、账号检查再封装成单独的Observable再进行使用：
 
-```
+```swift
 func reachabilityChecking() -> Observable<Void> {...} // throw error when not reachable
 func IMAPAccountChecking() -> Observable<Void> {...} // throw error when failed.
 
